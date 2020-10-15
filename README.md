@@ -8,11 +8,3 @@ AAA616 Projects
 ```sh
 $ go get -u github.com/llir/llvm/...
 ```
-
-### Running an analysis
-```sh
-$ cd sign
-$ go build
-$ ./sign ../test/toy/ll/fact.ll
-```
-
