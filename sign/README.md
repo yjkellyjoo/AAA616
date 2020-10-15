@@ -1,6 +1,6 @@
-# AAA616
+# Simple Sign Analysis for LLVM IR
 
-Simple intraprocedural sign analysis for LLVM IR
+Prototype of a simple, intraprocedural sign analysis
 
 ### Running the analysis
 ```sh
