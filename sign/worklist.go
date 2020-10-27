@@ -12,10 +12,13 @@ func (w *Worklist) IsEmpty() bool {
 func (w *Worklist) Add(n Node) {
     *w = append(*w, n)
 }
+
+// nodes들을 worklist에 통째로 추가
 func (w *Worklist) AddSet(nodes []Node) {
     for _, n := range nodes { w.Add(n) }
 }
 
+// node 하나 꺼냄
 func (w *Worklist) Choose() Node {
     if len(*w) == 0 {
         panic("Worklist is empty")

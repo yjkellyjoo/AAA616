@@ -1,3 +1,7 @@
+/*
+defines two structs <Module> and <Cfg>. 
+Cfg also has several of its own methods. 
+*/
 package main
 
 import (
