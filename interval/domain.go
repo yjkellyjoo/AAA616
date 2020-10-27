@@ -13,16 +13,28 @@ type Interval interface {
 }
 
 type Top struct {}
+type Inter struct {
+    l int
+    u int
+}
 type Bot struct {}
 
 func (b Bot) String() string { return "Bot" }
+func (b Inter) String() string { return "Inter" }
 func (b Top) String() string { return "Top" }
 
 func InterTop() Interval { return Top{} }
+func InterInter() Interval { return Inter{} }
 func InterBot() Interval { return Bot{} }
 
 func InterOrder(i1, i2 Interval) bool {
-    panic ("Not implemented")
+    if (i1 == i2 || i2 == Top{} || i1 == Bot{}) {
+        return true
+    } else if (i1.l >= i2.l && i1.u <= i2.u) {
+        return true
+    } else {
+        return false
+    }
 }
 
 func InterJoin (i1, i2 Interval) Interval {
