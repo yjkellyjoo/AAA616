@@ -19,6 +19,9 @@ type Inter struct {
 }
 type Bot struct {}
 
+type Pos struct {}  // struct for +infinite upp
+type Neg struct {}  // struct for -infinite low
+
 func (b Bot) String() string { return "Bot" }
 func (b Inter) String() string { return "Inter" }
 func (b Top) String() string { return "Top" }
@@ -58,9 +61,30 @@ func InterJoin (i1, i2 Interval) Interval {
     }
 }
 
+// InterBottom?
+
 func InterWiden(i1, i2 Interval) Interval {
-    panic("Not implemented")
+    if (i1 == Bot{}) {
+        return i2
+    } else if (i2 == Bot{}) {
+        return i1
+    } else {
+        var inter Inter
+        if (i2.l < i1.l) {
+            inter.l = Neg{}
+        } else {
+            inter.l = i1.l
+        }
+        if (i2.u > i1.u) {
+            inter.u = Pos{}
+        } else {
+            inter.u = i1.u
+        }
+        return inter
+    }
 }
+
+// InterNarrow?
 
 /// end of Interval ///
 
