@@ -12,12 +12,14 @@ type Interval interface {
     String() string
 }
 
-func InterTop() Interval {
-    panic("Not implemented")
-}
-func InterBot() Interval {
-    panic("Not implemented")
-}
+type Top struct {}
+type Bot struct {}
+
+func (b Bot) String() string { return "Bot" }
+func (b Top) String() string { return "Top" }
+
+func InterTop() Interval { return Top{} }
+func InterBot() Interval { return Bot{} }
 
 func InterOrder(i1, i2 Interval) bool {
     panic ("Not implemented")
@@ -30,6 +32,8 @@ func InterJoin (i1, i2 Interval) Interval {
 func InterWiden(i1, i2 Interval) Interval {
     panic("Not implemented")
 }
+
+/// end of Interval ///
 
 type State map[string]Interval
 
