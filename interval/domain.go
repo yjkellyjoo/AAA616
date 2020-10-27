@@ -38,7 +38,24 @@ func InterOrder(i1, i2 Interval) bool {
 }
 
 func InterJoin (i1, i2 Interval) Interval {
-    panic("Not implemented")
+    if (i1 == Bot{}) {
+        return i2
+    } else if (i2 == Bot{}) {
+        return i1
+    } else {
+        var inter Inter
+        if (i1.l < i2.l) {
+            inter.l = i1.l
+        } else {
+            inter.l = i2.l
+        }
+        if (i1.u > i2.u) {
+            inter.u = i1.u
+        } else {
+            inter.u = i2.u
+        }
+        return inter
+    }
 }
 
 func InterWiden(i1, i2 Interval) Interval {
