@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+    // 파일 읽어와서 llvm 돌리기
     flag.Parse()
     args := flag.Args()
     filename := args[0]
