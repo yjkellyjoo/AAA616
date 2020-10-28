@@ -1,7 +1,7 @@
 package main
 
 import (
-
+    "math"
     "github.com/llir/llvm/ir"
 )
 
@@ -12,41 +12,102 @@ type Interval interface {
     String() string
 }
 
-type Top struct {}
-type Inter struct {
-    l int
-    u int
-}
 type Bot struct {}
-
-type Pos struct {}  // struct for +infinite upp
-type Neg struct {}  // struct for -infinite low
+type Inter struct {
+    l int64
+    u int64
+}
+type Top struct {
+    l int64
+    u int64
+}
 
 func (b Bot) String() string { return "Bot" }
 func (b Inter) String() string { return "Inter" }
 func (b Top) String() string { return "Top" }
 
-func InterTop() Interval { return Top{} }
-func InterInter() Interval { return Inter{} }
 func InterBot() Interval { return Bot{} }
+// func InterInter() Interval { return Inter{} }
+func InterTop() Interval { return Top{ math.MinInt64, math.MaxInt64 } }
+
+
+/* Integer abstraction function 
+*  alpha : int -> sign
+*/
+func InterFromInt (x int64, y int64) Interval {
+    var inter Inter
+
+    // upper interval
+    if math.MaxInt64 - x < y {    // overflow -> +infinite
+        inter.u = math.MaxInt64
+    } else {
+        inter.u = x + y
+    }
+    // lower interval
+    if x < y {
+        inter.l = x
+    } else {
+        inter.l = y
+    }
+
+    return inter
+}
+
+/// sign domain에서의 operation들 정의 ///
+func InterPlus (i1 Interval) Interval {
+    switch i1.(type) {
+    case Bot: return Bot{}  // i1이 Bot일 때
+    case Top: return Top{}  // i1이 Top일 때
+    // case Pos:   //i1이 +이면서
+    //     switch i2.(type) {  // i2가 뭐일 땐?
+    //     case Bot: return Bot{}
+    //     case Pos: return Pos{}
+    //     case Zero: return Pos{}
+    //     case Top: return Top{}
+    //     case Neg: return Top{}
+    //     }
+    // case Neg:   //i1이 -이면서
+    //     switch i2.(type) {  // i2가 뭐일 땐?
+    //     case Bot: return Bot{}
+    //     case Pos: return Top{}
+    //     case Zero: return Neg{}
+    //     case Top: return Top{}
+    //     case Neg: return Neg{}
+    //     }
+    // case Zero:
+    //     return i2
+    }
+    panic("Unreachable")    // sanity check
+}
 
 func InterOrder(i1, i2 Interval) bool {
-    if (i1 == i2 || i2 == Top{} || i1 == Bot{}) {
+    if (i1 == i2 || i2 == InterTop() || i1 == InterBot()) {
         return true
-    } else if (i1.l >= i2.l && i1.u <= i2.u) {
-        return true
+    } else if (i1 == InterTop() || i2 == InterBot()) {
+            return false
     } else {
-        return false
+        i1 := i1.(Inter)
+        i2 := i2.(Inter)
+        if (i1.l >= i2.l && i1.u <= i2.u) {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
 func InterJoin (i1, i2 Interval) Interval {
-    if (i1 == Bot{}) {
+    if (i1 == InterBot()) {
         return i2
-    } else if (i2 == Bot{}) {
+    } else if (i2 == InterBot()) {
+        return i1
+    } else if (i1 == InterTop() || i2 == InterTop()) {
         return i1
     } else {
         var inter Inter
+        i1 := i1.(Inter)
+        i2 := i2.(Inter)
+
         if (i1.l < i2.l) {
             inter.l = i1.l
         } else {
@@ -64,22 +125,30 @@ func InterJoin (i1, i2 Interval) Interval {
 // InterBottom?
 
 func InterWiden(i1, i2 Interval) Interval {
-    if (i1 == Bot{}) {
+    if (i1 == InterBot()) {
         return i2
-    } else if (i2 == Bot{}) {
+    } else if (i2 == InterBot()) {
         return i1
     } else {
         var inter Inter
+        i1 := i1.(Inter)
+        i2 := i2.(Inter)
+
         if (i2.l < i1.l) {
-            inter.l = Neg{}
+            inter.l = math.MinInt64
         } else {
             inter.l = i1.l
         }
         if (i2.u > i1.u) {
-            inter.u = Pos{}
+            inter.u = math.MaxInt64
         } else {
             inter.u = i1.u
         }
+        // Inter가 Top이 될 때 확인?
+        // if (inter.l == math.MinInt32 && inter.u == math.MaxInt32) {
+        //     var top Top = Top(inter)
+        //     return top
+        // }
         return inter
     }
 }
