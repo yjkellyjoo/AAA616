@@ -8,17 +8,13 @@ import (
 //	"github.com/llir/llvm/ir/enum"
 )
 
-func evalArgument(x value.Value, y value.Value, s *State) Interval {
-    switch x := x.(type) {
+func evalArgument(v value.Value, s *State) Interval {
+    switch v := v.(type) {
     case *constant.Int:
-    	switch y := y.(type) {
-    	case *constant.Int:
-	        i := x.X.Int64()
-	        j := y.X.Int64()
-	        return InterFromInt(i, j)
-    	}
+        i := v.X.Int64()
+        return InterFromInt(i)
     default: // variable
-        loc := x.Ident()
+        loc := v.Ident()
         itv := s.Find(loc)
         return itv
     }
@@ -32,9 +28,20 @@ func (s *State) transferInstAdd(inst *ir.InstAdd) {
 	// fmt.Println("inst.Y: ", inst.Y)
 	// fmt.Println("inst.Typ: ", inst.Typ)
 	// fmt.Println("")
-    int := evalArgument(inst.X, inst.Y, s)   // Sign과 다르게 두 매개변수가 동시에 필요. 
-    s.Bind(loc, InterPlus(int))
+    interX := evalArgument(inst.X, s)
+    interY := evalArgument(inst.Y, s)
+    s.Bind(loc, InterPlus(interX, interY))
+}
 
+
+// 양쪽에서 오는 Control Flow 두개 Join 시키는 Phi 함수
+func (s *State) transferInstPhi(inst *ir.InstPhi) {
+    loc := inst.LocalIdent.Ident()
+    itv := InterBot()
+    for _, inc := range inst.Incs {
+        itv = InterJoin(itv, evalArgument(inc.X, s))
+    }
+    s.Bind(loc, itv)
 }
 
 func (s *State) transferInstCall(inst *ir.InstCall) {
@@ -46,8 +53,8 @@ func (s *State) transferInst(inst ir.Instruction) {
     case *ir.InstAdd: s.transferInstAdd(inst)
     // case *ir.InstMul: s.transferInstMul(inst)
     // case *ir.InstICmp: s.transferInstICmp(inst)
-    // case *ir.InstPhi: s.transferInstPhi(inst)
-    // case *ir.InstCall: s.transferInstCall(inst)
+    case *ir.InstPhi: s.transferInstPhi(inst)
+    case *ir.InstCall: s.transferInstCall(inst)
     default: fmt.Printf("Unsupported instruction: %T\n", inst)
     }
 }

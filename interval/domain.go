@@ -2,6 +2,7 @@ package main
 
 import (
     "math"
+    "strconv"
     "github.com/llir/llvm/ir"
 )
 
@@ -23,7 +24,28 @@ type Top struct {
 }
 
 func (b Bot) String() string { return "Bot" }
-func (b Inter) String() string { return "Inter" }
+func (b Inter) String() string { 
+    var s1 string 
+    var s2 string
+
+    if b.l == math.MinInt64 {
+        s1 = "min"
+    } else if b.l == math.MaxInt64 {
+        s1 = "max"
+    } else {
+        s1 = strconv.Itoa(int(b.l))
+    }
+
+    if b.u == math.MinInt64 {
+        s2 = "min"
+    } else if b.u == math.MaxInt64 {
+        s2 = "max"
+    } else {
+        s2 = strconv.Itoa(int(b.u))
+    }
+
+    return "[" + s1 + ", " + s2 + "]" 
+}
 func (b Top) String() string { return "Top" }
 
 func InterBot() Interval { return Bot{} }
@@ -34,51 +56,60 @@ func InterTop() Interval { return Top{ math.MinInt64, math.MaxInt64 } }
 /* Integer abstraction function 
 *  alpha : int -> sign
 */
-func InterFromInt (x int64, y int64) Interval {
-    var inter Inter
+func InterFromInt (x int64) Interval {
+    // var inter Inter
 
-    // upper interval
-    if math.MaxInt64 - x < y {    // overflow -> +infinite
-        inter.u = math.MaxInt64
-    } else {
-        inter.u = x + y
-    }
-    // lower interval
-    if x < y {
-        inter.l = x
-    } else {
-        inter.l = y
-    }
+    // // upper interval
+    // if math.MaxInt64 - x < y {    // overflow -> +infinite
+    //     inter.u = math.MaxInt64
+    // } else {
+    //     inter.u = x + y
+    // }
+    // // lower interval
+    // if x < y {
+    //     inter.l = x
+    // } else {
+    //     inter.l = y
+    // }
 
-    return inter
+    return Inter{x, x}
 }
 
-/// sign domain에서의 operation들 정의 ///
-func InterPlus (i1 Interval) Interval {
+    /*
+    *   i1  +   i2
+    *-----------------------
+    *   Top    Bot  -> Top
+    *   Top   Inter -> Top
+    *   Top    Top  -> Top
+    *   Bot    Top  -> Top
+    *  Inter   Top  -> Top
+    *   Bot    Bot  -> Bot
+    *   Bot   Inter -> i2
+    *  Inter   Bot  -> i1
+    *  Inter  Inter -> InterJoin(i1, i2)
+    */
+    func InterPlus (i1, i2 Interval) Interval {
     switch i1.(type) {
-    case Bot: return Bot{}  // i1이 Bot일 때
+    case Bot:  // i1이 Bot일 때
+        switch i2.(type) {
+        case Bot: return Bot{} 
+        case Top: return Top{}
+        case Inter: return i2 
+        }
     case Top: return Top{}  // i1이 Top일 때
-    // case Pos:   //i1이 +이면서
-    //     switch i2.(type) {  // i2가 뭐일 땐?
-    //     case Bot: return Bot{}
-    //     case Pos: return Pos{}
-    //     case Zero: return Pos{}
-    //     case Top: return Top{}
-    //     case Neg: return Top{}
-    //     }
-    // case Neg:   //i1이 -이면서
-    //     switch i2.(type) {  // i2가 뭐일 땐?
-    //     case Bot: return Bot{}
-    //     case Pos: return Top{}
-    //     case Zero: return Neg{}
-    //     case Top: return Top{}
-    //     case Neg: return Neg{}
-    //     }
-    // case Zero:
-    //     return i2
+    case Inter:
+        switch i2.(type) {
+        case Bot: return i1
+        case Top: return Top{}
+        case Inter: return InterJoin(i1, i2)
+        }
     }
     panic("Unreachable")    // sanity check
 }
+
+
+
+
 
 func InterOrder(i1, i2 Interval) bool {
     if (i1 == i2 || i2 == InterTop() || i1 == InterBot()) {

@@ -22,7 +22,7 @@ func evalArgument(v value.Value, s *State) Sign {
 }
 
 func (s *State) transferInstAdd(inst *ir.InstAdd) {
-    loc := inst.LocalIdent.Ident()  // assign되는 변수를 찾는다
+    loc := inst.LocalIdent.Ident()  // 덧셈 연산의 결과가 assign되는 변수를 찾는다
     vx := evalArgument(inst.X, s)   // 덧셈 시키는 첫번째 변수
     vy := evalArgument(inst.Y, s)   // 덧셈 시키는 두번째 변수
     s.Bind(loc, SignPlus(vx, vy))   // 덧셈 action
