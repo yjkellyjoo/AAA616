@@ -5,7 +5,7 @@ import (
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/value"
 	"github.com/llir/llvm/ir/constant"
-//	"github.com/llir/llvm/ir/enum"
+	"github.com/llir/llvm/ir/enum"
 )
 
 func evalArgument(v value.Value, s *State) Interval {
@@ -40,6 +40,21 @@ func (s *State) transferInstMul(inst *ir.InstMul) {
     s.Bind(loc, InterMult(vx, vy))
 }
 
+func (s *State) transferInstICmp(inst *ir.InstICmp) {
+    loc := inst.LocalIdent.Ident()
+    vx := evalArgument(inst.X, s)
+    vy := evalArgument(inst.Y, s)
+    itv := InterTop()
+    switch inst.Pred {
+    case enum.IPredSLE:
+        itv = InterSLE(vx, vy)
+    // 더 다양한 종류의 comp ir 있음
+    // case enum.IPredEQ:
+    //     ...
+    }
+    s.Bind(loc, itv)
+}
+
 // 양쪽에서 오는 Control Flow 두개 Join 시키는 Phi 함수
 func (s *State) transferInstPhi(inst *ir.InstPhi) {
     loc := inst.LocalIdent.Ident()
@@ -58,7 +73,7 @@ func (s *State) transferInst(inst ir.Instruction) {
     switch inst := inst.(type) {
     case *ir.InstAdd: s.transferInstAdd(inst)
     case *ir.InstMul: s.transferInstMul(inst)
-    // case *ir.InstICmp: s.transferInstICmp(inst)
+    case *ir.InstICmp: s.transferInstICmp(inst)
     case *ir.InstPhi: s.transferInstPhi(inst)
     case *ir.InstCall: s.transferInstCall(inst)
     default: fmt.Printf("Unsupported instruction: %T\n", inst)

@@ -160,6 +160,24 @@ func InterMult (i1, i2 Interval) Interval {
     panic("Unreachable")    // sanity check
 }
 
+// SLE: i1 <= i2 ? 
+func InterSLE(i1, i2 Interval) Interval {
+    // Top{} true, Bot{} false 로 해석
+    switch i1.(type) {
+    case Bot: return Top{}
+    case Top: return Bot{}
+    case Inter:
+        switch i2.(type) {
+        case Bot: return Bot{}
+        case Top: return Top{}
+        case Inter: 
+            // ???
+        }
+
+    }
+    panic("Unreachable")
+}
+
 
 func InterOrder(i1, i2 Interval) bool {
     if (i1 == i2 || i2 == InterTop() || i1 == InterBot()) {
@@ -226,10 +244,10 @@ func InterWiden(i1, i2 Interval) Interval {
             inter.u = i1.u
         }
         // Inter가 Top이 될 때 확인?
-        // if (inter.l == math.MinInt32 && inter.u == math.MaxInt32) {
-        //     var top Top = Top(inter)
-        //     return top
-        // }
+        if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+            var top Top = Top(inter)
+            return top
+        }
         return inter
     }
 }
