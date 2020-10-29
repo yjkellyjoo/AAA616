@@ -33,6 +33,12 @@ func (s *State) transferInstAdd(inst *ir.InstAdd) {
     s.Bind(loc, InterPlus(interX, interY))
 }
 
+func (s *State) transferInstMul(inst *ir.InstMul) {
+    loc := inst.LocalIdent.Ident()
+    vx := evalArgument(inst.X, s)
+    vy := evalArgument(inst.Y, s)
+    s.Bind(loc, InterMult(vx, vy))
+}
 
 // 양쪽에서 오는 Control Flow 두개 Join 시키는 Phi 함수
 func (s *State) transferInstPhi(inst *ir.InstPhi) {
@@ -51,7 +57,7 @@ func (s *State) transferInstCall(inst *ir.InstCall) {
 func (s *State) transferInst(inst ir.Instruction) {
     switch inst := inst.(type) {
     case *ir.InstAdd: s.transferInstAdd(inst)
-    // case *ir.InstMul: s.transferInstMul(inst)
+    case *ir.InstMul: s.transferInstMul(inst)
     // case *ir.InstICmp: s.transferInstICmp(inst)
     case *ir.InstPhi: s.transferInstPhi(inst)
     case *ir.InstCall: s.transferInstCall(inst)

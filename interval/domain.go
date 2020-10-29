@@ -57,38 +57,23 @@ func InterTop() Interval { return Top{ math.MinInt64, math.MaxInt64 } }
 *  alpha : int -> sign
 */
 func InterFromInt (x int64) Interval {
-    // var inter Inter
-
-    // // upper interval
-    // if math.MaxInt64 - x < y {    // overflow -> +infinite
-    //     inter.u = math.MaxInt64
-    // } else {
-    //     inter.u = x + y
-    // }
-    // // lower interval
-    // if x < y {
-    //     inter.l = x
-    // } else {
-    //     inter.l = y
-    // }
-
     return Inter{x, x}
 }
 
-    /*
-    *   i1  +   i2
-    *-----------------------
-    *   Top    Bot  -> Top
-    *   Top   Inter -> Top
-    *   Top    Top  -> Top
-    *   Bot    Top  -> Top
-    *  Inter   Top  -> Top
-    *   Bot    Bot  -> Bot
-    *   Bot   Inter -> i2
-    *  Inter   Bot  -> i1
-    *  Inter  Inter -> InterJoin(i1, i2)
-    */
-    func InterPlus (i1, i2 Interval) Interval {
+/*
+*   i1  +   i2
+*-----------------------
+*   Bot    Bot  -> Bot
+*   Bot   Inter -> i2
+*   Bot    Top  -> Top
+*   Top    Bot  -> Top
+*   Top   Inter -> Top
+*   Top    Top  -> Top
+*  Inter   Bot  -> i1
+*  Inter  Inter -> Inter
+*  Inter   Top  -> Top
+*/
+func InterPlus (i1, i2 Interval) Interval {
     switch i1.(type) {
     case Bot:  // i1이 Bot일 때
         switch i2.(type) {
@@ -101,14 +86,79 @@ func InterFromInt (x int64) Interval {
         switch i2.(type) {
         case Bot: return i1
         case Top: return Top{}
-        case Inter: return InterJoin(i1, i2)
+        case Inter:
+            var inter Inter
+            i1 := i1.(Inter)
+            i2 := i2.(Inter)
+
+            // upper interval
+            if math.MaxInt64 - i1.u < i2.u {    // overflow -> +infinite
+                inter.u = math.MaxInt64
+            } else {
+                inter.u = i1.u + i2.u
+            }
+            // lower interval
+            inter.l = i1.l + i2.l
+
+        return inter
         }
     }
     panic("Unreachable")    // sanity check
 }
 
+/*
+*   i1  *   i2
+*-----------------------
+*   Bot    Bot  -> Bot
+*   Bot   Inter -> Bot
+*   Bot    Top  -> Bot
+*   Top    Bot  -> Bot
+*   Top   Inter -> Top
+*   Top    Top  -> Top
+*  Inter   Bot  -> Bot
+*  Inter  Inter -> Inter
+*  Inter   Top  -> Top
+*/
+func InterMult (i1, i2 Interval) Interval {
+    switch i1.(type) {
+    case Bot:  // i1이 Bot일 때
+        switch i2.(type) {
+        case Bot: return Bot{} 
+        case Top: return Bot{}
+        case Inter: return Bot{}
+        }
+    case Top:  // i1이 Top일 때
+        switch i2.(type) {
+        case Bot: return Bot{}
+        default: return Top{}
+        }
+    case Inter:
+        switch i2.(type) {
+        case Bot: return Bot{}
+        case Top: return Top{}
+        case Inter: 
+            var inter Inter
+            i1 := i1.(Inter)
+            i2 := i2.(Inter)
 
+            // upper interval - check overflow 
+            var result int64
+            result = i1.u * i2.u
+            if (i1.u == 0 || i2.u == 0) {
+                inter.u = 0
+            } else if (i1.u == result / i2.u) {
+                inter.u = result
+            } else {    // in case of overflow
+                inter.u = math.MaxInt64
+            }
+            // lower interval
+            inter.l = i1.l * i2.l
 
+        return inter
+        }
+    }
+    panic("Unreachable")    // sanity check
+}
 
 
 func InterOrder(i1, i2 Interval) bool {
