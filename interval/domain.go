@@ -77,15 +77,15 @@ func InterPlus (i1, i2 Interval) Interval {
     switch i1.(type) {
     case Bot:  // i1이 Bot일 때
         switch i2.(type) {
-        case Bot: return Bot{} 
-        case Top: return Top{}
+        case Bot: return InterBot() 
+        case Top: return InterTop()
         case Inter: return i2 
         }
-    case Top: return Top{}  // i1이 Top일 때
+    case Top: return InterTop()  // i1이 Top일 때
     case Inter:
         switch i2.(type) {
         case Bot: return i1
-        case Top: return Top{}
+        case Top: return InterTop()
         case Inter:
             var inter Inter
             i1 := i1.(Inter)
@@ -121,11 +121,11 @@ func InterPlus (i1, i2 Interval) Interval {
 */
 func InterMinus (i1, i2 Interval) Interval {
     switch i1.(type) {
-    case Bot: return Bot{}  // i1이 Bot일 때
+    case Bot: return InterBot()  // i1이 Bot일 때
     case Top:  // i1이 Top일 때
         switch i2.(type) {
-        case Bot: return Top{} 
-        case Top: return Bot{}
+        case Bot: return InterTop()
+        case Top: return InterBot()
         case Inter: 
             var inter Inter
             i2 := i2.(Inter)
@@ -138,7 +138,7 @@ func InterMinus (i1, i2 Interval) Interval {
     case Inter:
         switch i2.(type) {
         case Bot: return i1
-        case Top: return Bot{}
+        case Top: return InterBot()
         case Inter:
             var inter Inter
             i1 := i1.(Inter)
@@ -176,19 +176,19 @@ func InterMult (i1, i2 Interval) Interval {
     switch i1.(type) {
     case Bot:  // i1이 Bot일 때
         switch i2.(type) {
-        case Bot: return Bot{} 
-        case Top: return Bot{}
-        case Inter: return Bot{}
+        case Bot: return InterBot() 
+        case Top: return InterBot()
+        case Inter: return InterBot()
         }
     case Top:  // i1이 Top일 때
         switch i2.(type) {
-        case Bot: return Bot{}
-        default: return Top{}
+        case Bot: return InterBot()
+        default: return InterTop()
         }
     case Inter:
         switch i2.(type) {
-        case Bot: return Bot{}
-        case Top: return Top{}
+        case Bot: return InterBot()
+        case Top: return InterTop()
         case Inter: 
             var inter Inter
             i1 := i1.(Inter)
@@ -213,18 +213,20 @@ func InterMult (i1, i2 Interval) Interval {
     panic("Unreachable")    // sanity check
 }
 
-// SLE: i1 <= i2 ? 
+// SLE: i1 <= i2 ?
+// icmp sle 1, 2 
 func InterSLE(i1, i2 Interval) Interval {
     // Top{} true, Bot{} false 로 해석
     switch i1.(type) {
-    case Bot: return Top{}
-    case Top: return Bot{}
+    case Bot: return InterTop()
+    case Top: return InterBot()
     case Inter:
         switch i2.(type) {
-        case Bot: return Bot{}
-        case Top: return Top{}
+        case Bot: return InterBot()
+        case Top: return InterTop()
         case Inter: 
-            // ???
+            // TODO
+
         }
 
     }
@@ -355,7 +357,85 @@ func InterWiden(i1, i2 Interval) Interval {
     panic("Unreachable")    // sanity check
 }
 
-// InterNarrow?
+func InterNarrow(i1, i2 Interval) Interval {
+switch i1.(type) {
+    case Bot: return InterBot()
+    case Top:
+        switch i2.(type) {
+        case Top: return InterTop()
+        case Bot: return InterBot()
+        case Inter:
+            var inter Inter
+            i1 := i1.(Top)
+            i2 := i2.(Inter)
+
+            if (i1.l == math.MinInt64) {
+                inter.l = i2.l
+            } else {
+                inter.l = i1.l
+            }
+            if (i1.u == math.MaxInt64) {
+                inter.u = i2.u
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
+        }
+    case Inter:
+        switch i2.(type) {
+        case Bot: return InterBot()
+        case Top: 
+            var inter Inter
+            i2 := i2.(Top)
+            i1 := i1.(Inter)
+
+            if (i1.l == math.MinInt64) {
+                inter.l = i2.l
+            } else {
+                inter.l = i1.l
+            }
+            if (i1.u == math.MaxInt64) {
+                inter.u = i2.u
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
+        case Inter:
+            var inter Inter
+            i1 := i1.(Inter)            
+            i2 := i2.(Inter)
+
+            if (i1.l == math.MinInt64) {
+                inter.l = i2.l
+            } else {
+                inter.l = i1.l
+            }
+            if (i1.u == math.MaxInt64) {
+                inter.u = i2.u
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
+        }
+    }
+    panic("Unreachable")    // sanity check
+
+}
 
 /// end of Interval ///
 
@@ -418,6 +498,10 @@ func StateWiden(s1, s2 State) State {
         s3[k] = InterWiden(v1, v2)
     }
     return s3
+}
+
+func StateNarrow(s1, s2 State) State {
+    // TODO
 }
 
 func (s State) String() string {

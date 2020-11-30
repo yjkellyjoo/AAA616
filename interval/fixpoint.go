@@ -40,7 +40,8 @@ func Analyze(cfg Cfg) Table {
             // TODO: Delayed widening?
             if NeedWiden(here) {
                 tbl.Bind(here, StateWiden(old_state, state))
-                // TODO: Narrowing after widening?
+                // TODO: Narrowing after widening
+                tbl.Bind(here, StateNarrow(old_state, state))
             } else {
                 tbl.Bind(here, StateJoin(old_state, state))
             }
