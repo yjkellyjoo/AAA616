@@ -33,6 +33,18 @@ func (s *State) transferInstAdd(inst *ir.InstAdd) {
     s.Bind(loc, InterPlus(interX, interY))
 }
 
+func (s *State) transferInstSub(inst *ir.InstSub) {
+    loc := inst.LocalIdent.Ident()  // assign되는 변수를 찾는다
+    // fmt.Println("loc: ", loc)
+    // fmt.Println("inst.X: ", inst.X)
+    // fmt.Println("inst.Y: ", inst.Y)
+    // fmt.Println("inst.Typ: ", inst.Typ)
+    // fmt.Println("")
+    interX := evalArgument(inst.X, s)
+    interY := evalArgument(inst.Y, s)
+    s.Bind(loc, InterMinus(interX, interY))
+}
+
 func (s *State) transferInstMul(inst *ir.InstMul) {
     loc := inst.LocalIdent.Ident()
     vx := evalArgument(inst.X, s)
@@ -72,6 +84,7 @@ func (s *State) transferInstCall(inst *ir.InstCall) {
 func (s *State) transferInst(inst ir.Instruction) {
     switch inst := inst.(type) {
     case *ir.InstAdd: s.transferInstAdd(inst)
+    case *ir.InstSub: s.transferInstSub(inst)
     case *ir.InstMul: s.transferInstMul(inst)
     case *ir.InstICmp: s.transferInstICmp(inst)
     case *ir.InstPhi: s.transferInstPhi(inst)

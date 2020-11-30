@@ -107,6 +107,59 @@ func InterPlus (i1, i2 Interval) Interval {
 }
 
 /*
+*   i1  -   i2
+*-----------------------
+*   Bot    Bot  -> Bot
+*   Bot   Inter -> Bot
+*   Bot    Top  -> Bot
+*   Top    Bot  -> Top
+*   Top   Inter -> Top-i2
+*   Top    Top  -> Bot
+*  Inter   Bot  -> i1
+*  Inter  Inter -> Inter or Bot
+*  Inter   Top  -> Bot
+*/
+func InterMinus (i1, i2 Interval) Interval {
+    switch i1.(type) {
+    case Bot: return Bot{}  // i1이 Bot일 때
+    case Top:  // i1이 Top일 때
+        switch i2.(type) {
+        case Bot: return Top{} 
+        case Top: return Bot{}
+        case Inter: 
+            var inter Inter
+            i2 := i2.(Inter)
+
+            inter.u = math.MaxInt64 - i2.u
+            inter.l = math.MinInt64 - i2.l
+
+            return inter
+        }
+    case Inter:
+        switch i2.(type) {
+        case Bot: return i1
+        case Top: return Bot{}
+        case Inter:
+            var inter Inter
+            i1 := i1.(Inter)
+            i2 := i2.(Inter)
+
+            // lower interval
+            if math.MinInt64 - i1.l > i2.l {    // underflow -> -infinite
+                inter.l = math.MinInt64
+            } else {
+                inter.l = i1.l - i2.l
+            }
+            // upper interval
+            inter.u = i1.u - i2.u
+
+            return inter
+        }
+    }
+    panic("Unreachable")    // sanity check
+}
+
+/*
 *   i1  *   i2
 *-----------------------
 *   Bot    Bot  -> Bot
@@ -224,32 +277,82 @@ func InterJoin (i1, i2 Interval) Interval {
 // InterBottom?
 
 func InterWiden(i1, i2 Interval) Interval {
-    if (i1 == InterBot()) {
-        return i2
-    } else if (i2 == InterBot()) {
-        return i1
-    } else {
-        var inter Inter
-        i1 := i1.(Inter)
-        i2 := i2.(Inter)
+    switch i1.(type) {
+    case Bot: return i2
+    case Top:
+        switch i2.(type) {
+        case Top: return InterTop()
+        case Bot: return i1
+        case Inter:
+            var inter Inter
+            i1 := i1.(Top)
+            i2 := i2.(Inter)
 
-        if (i2.l < i1.l) {
-            inter.l = math.MinInt64
-        } else {
-            inter.l = i1.l
+            if (i2.l < i1.l) {
+                inter.l = math.MinInt64
+            } else {
+                inter.l = i1.l
+            }
+            if (i2.u > i1.u) {
+                inter.u = math.MaxInt64
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
         }
-        if (i2.u > i1.u) {
-            inter.u = math.MaxInt64
-        } else {
-            inter.u = i1.u
+    case Inter:
+        switch i2.(type) {
+        case Bot: return i1
+        case Top: 
+            var inter Inter
+            i2 := i2.(Top)
+            i1 := i1.(Inter)
+
+            if (i2.l < i1.l) {
+                inter.l = math.MinInt64
+            } else {
+                inter.l = i1.l
+            }
+            if (i2.u > i1.u) {
+                inter.u = math.MaxInt64
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
+        case Inter:
+            var inter Inter
+            i1 := i1.(Inter)            
+            i2 := i2.(Inter)
+
+            if (i2.l < i1.l) {
+                inter.l = math.MinInt64
+            } else {
+                inter.l = i1.l
+            }
+            if (i2.u > i1.u) {
+                inter.u = math.MaxInt64
+            } else {
+                inter.u = i1.u
+            }
+            // inter가 Top이 될 때 확인
+            if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
+                var top Top = Top(inter)
+                return top
+            }
+            return inter
         }
-        // Inter가 Top이 될 때 확인?
-        if (inter.l == math.MinInt64 && inter.u == math.MaxInt64) {
-            var top Top = Top(inter)
-            return top
-        }
-        return inter
     }
+    panic("Unreachable")    // sanity check
 }
 
 // InterNarrow?
