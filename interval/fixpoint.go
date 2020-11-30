@@ -37,8 +37,10 @@ func Analyze(cfg Cfg) Table {
         state.TransferBlock(here.Insts)
         old_state := tbl.Find(here)
         if !StateOrder(state, old_state) {
+            // TODO: Delayed widening?
             if NeedWiden(here) {
                 tbl.Bind(here, StateWiden(old_state, state))
+                // TODO: Narrowing after widening?
             } else {
                 tbl.Bind(here, StateJoin(old_state, state))
             }
