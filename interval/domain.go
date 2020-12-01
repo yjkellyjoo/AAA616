@@ -7,6 +7,8 @@ import (
 	"github.com/llir/llvm/ir"
 )
 
+const index = 100
+
 /////////////////////
 // Interval Domain //
 /////////////////////
@@ -49,10 +51,9 @@ func (b Inter) String() string {
 }
 func (b Top) String() string { return "Top" }
 
-func InterBot() Interval { return Bot{} }
-
-// func InterInter() Interval { return Inter{} }
-func InterTop() Interval { return Top{math.MinInt64, math.MaxInt64} }
+func InterBot() Interval   { return Bot{} }
+func InterInter() Interval { return Inter{} }
+func InterTop() Interval   { return Top{math.MinInt64, math.MaxInt64} }
 
 /* Integer abstraction function
 *  alpha : int -> sign
@@ -249,7 +250,14 @@ func InterSLE(i1, i2 Interval) Interval {
 			return InterTop()
 		case Inter:
 			// TODO:
+			i1 := i1.(Inter)
+			i2 := i2.(Inter)
 
+			if i1.l >= i2.l && i1.u <= i2.u {
+				return InterTop()
+			} else if i1.l < i2.l && i1.u > i2.u {
+				return InterBot()
+			}
 		}
 
 	}
@@ -300,7 +308,7 @@ func InterJoin(i1, i2 Interval) Interval {
 
 // InterBottom?
 
-func InterWiden(i1, i2 Interval) Interval {
+func InterWiden(i1, i2 Interval, thr [index]int64) Interval {
 	switch i1.(type) {
 	case Bot:
 		return i2
@@ -316,12 +324,24 @@ func InterWiden(i1, i2 Interval) Interval {
 			i2 := i2.(Inter)
 
 			if i2.l < i1.l {
-				inter.l = math.MinInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2-i] <= i2.l {
+						inter.l = thr[index/2-i]
+						break
+					}
+					inter.l = math.MinInt64
+				}
 			} else {
 				inter.l = i1.l
 			}
 			if i2.u > i1.u {
-				inter.u = math.MaxInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2+i] >= i2.l {
+						inter.l = thr[index/2+i]
+						break
+					}
+					inter.u = math.MaxInt64
+				}
 			} else {
 				inter.u = i1.u
 			}
@@ -342,12 +362,24 @@ func InterWiden(i1, i2 Interval) Interval {
 			i1 := i1.(Inter)
 
 			if i2.l < i1.l {
-				inter.l = math.MinInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2-i] <= i2.l {
+						inter.l = thr[index/2-i]
+						break
+					}
+					inter.l = math.MinInt64
+				}
 			} else {
 				inter.l = i1.l
 			}
 			if i2.u > i1.u {
-				inter.u = math.MaxInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2+i] >= i2.l {
+						inter.l = thr[index/2+i]
+						break
+					}
+					inter.u = math.MaxInt64
+				}
 			} else {
 				inter.u = i1.u
 			}
@@ -363,12 +395,24 @@ func InterWiden(i1, i2 Interval) Interval {
 			i2 := i2.(Inter)
 
 			if i2.l < i1.l {
-				inter.l = math.MinInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2-i] <= i2.l {
+						inter.l = thr[index/2-i]
+						break
+					}
+					inter.l = math.MinInt64
+				}
 			} else {
 				inter.l = i1.l
 			}
 			if i2.u > i1.u {
-				inter.u = math.MaxInt64
+				for i := 0; i < index/2; i++ {
+					if thr[index/2+i] >= i2.l {
+						inter.l = thr[index/2+i]
+						break
+					}
+					inter.u = math.MaxInt64
+				}
 			} else {
 				inter.u = i1.u
 			}
@@ -516,7 +560,7 @@ func StateJoin(s1, s2 State) State {
 	return s3
 }
 
-func StateWiden(s1, s2 State) State {
+func StateWiden(s1, s2 State, thr [index]int64) State {
 	s3 := make(State)
 	for k, v := range s2 {
 		s3[k] = v
@@ -526,7 +570,7 @@ func StateWiden(s1, s2 State) State {
 		if !ok {
 			v2 = InterBot()
 		}
-		s3[k] = InterWiden(v1, v2)
+		s3[k] = InterWiden(v1, v2, thr)
 	}
 	return s3
 }
@@ -556,6 +600,8 @@ func (s State) String() string {
 	}
 	return res
 }
+
+/// end of State ///
 
 type Node *ir.Block
 type Table map[Node]State
