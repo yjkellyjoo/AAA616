@@ -22,7 +22,7 @@ func InputOf(here Node, cfg Cfg, tbl Table) State {
 
 //***************************
 func NeedWiden(count int) bool {
-	// 100회 까지는 StateJoin으로 해보고 안 끝나겠다 싶으면 widening
+	// index번 까지는 StateJoin으로 해보고 안 끝나겠다 싶으면 widening
 	if count < index {
 		return false
 	} else {

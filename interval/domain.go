@@ -306,8 +306,6 @@ func InterJoin(i1, i2 Interval) Interval {
 	}
 }
 
-// InterBottom?
-
 func InterWiden(i1, i2 Interval, thr [index]int64) Interval {
 	switch i1.(type) {
 	case Bot:

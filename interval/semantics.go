@@ -80,6 +80,15 @@ func (s *State) transferInstPhi(inst *ir.InstPhi) {
 func (s *State) transferInstCall(inst *ir.InstCall) {
 }
 
+func (s *State) transferInstLoad(inst *ir.InstLoad) {
+}
+
+func (s *State) transferInstPtrToInt(inst *ir.InstPtrToInt) {
+}
+
+func (s *State) transferInstGetElementPtr(inst *ir.InstGetElementPtr) {
+}
+
 func (s *State) transferInst(inst ir.Instruction) {
 	switch inst := inst.(type) {
 	case *ir.InstAdd:
@@ -94,6 +103,16 @@ func (s *State) transferInst(inst ir.Instruction) {
 		s.transferInstPhi(inst)
 	case *ir.InstCall:
 		s.transferInstCall(inst)
+
+	//**********************************
+	case *ir.InstLoad:
+		s.transferInstLoad(inst)
+	case *ir.InstPtrToInt:
+		s.transferInstPtrToInt(inst)
+	case *ir.InstGetElementPtr:
+		s.transferInstGetElementPtr(inst)
+	//**********************************
+
 	default:
 		fmt.Printf("Unsupported instruction: %T\n", inst)
 	}
