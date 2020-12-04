@@ -245,7 +245,7 @@ func InterSLE(i1, i2 Interval) Interval {
 		case Bot:
 			return InterBot()
 		case Top:
-			return i1
+			return InterTop()
 		case Inter:
 			var inter Inter
 			i2 := i2.(Inter)
@@ -259,7 +259,7 @@ func InterSLE(i1, i2 Interval) Interval {
 		case Bot:
 			return InterBot()
 		case Top:
-			return i1
+			return InterTop()
 		case Inter:
 			var inter Inter
 			i1 := i1.(Inter)
@@ -331,9 +331,9 @@ func InterWiden(i1, i2 Interval, thr [index]int64) Interval {
 			i2 := i2.(Inter)
 
 			if i2.l < i1.l {
-				for i := 0; i < index/2; i++ {
-					if thr[index/2-i] <= i2.l {
-						inter.l = thr[index/2-i]
+				for i := 0; i < index; i++ {
+					if thr[index-i] <= i2.l {
+						inter.l = thr[index-i]
 						break
 					}
 					inter.l = math.MinInt64
@@ -342,9 +342,9 @@ func InterWiden(i1, i2 Interval, thr [index]int64) Interval {
 				inter.l = i1.l
 			}
 			if i2.u > i1.u {
-				for i := 0; i < index/2; i++ {
-					if thr[index/2+i] >= i2.l {
-						inter.l = thr[index/2+i]
+				for i := 0; i < index; i++ {
+					if thr[i] >= i2.l {
+						inter.l = thr[i]
 						break
 					}
 					inter.u = math.MaxInt64
