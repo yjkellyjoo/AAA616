@@ -83,10 +83,19 @@ func (s *State) transferInstCall(inst *ir.InstCall) {
 func (s *State) transferInstLoad(inst *ir.InstLoad) {
 }
 
+func (s *State) transferInstSext(inst *ir.InstSExt) {
+}
+
+func (s *State) transferInstZext(inst *ir.InstZExt) {
+}
+
 func (s *State) transferInstPtrToInt(inst *ir.InstPtrToInt) {
 }
 
 func (s *State) transferInstGetElementPtr(inst *ir.InstGetElementPtr) {
+}
+
+func (s *State) transferInstAlloca(inst *ir.InstAlloca) {
 }
 
 func (s *State) transferInst(inst ir.Instruction) {
@@ -107,10 +116,17 @@ func (s *State) transferInst(inst ir.Instruction) {
 	//**********************************
 	case *ir.InstLoad:
 		s.transferInstLoad(inst)
+	case *ir.InstSExt:
+		s.transferInstSext(inst)
+	case *ir.InstZExt:
+		s.transferInstZext(inst)
+
 	case *ir.InstPtrToInt:
 		s.transferInstPtrToInt(inst)
 	case *ir.InstGetElementPtr:
 		s.transferInstGetElementPtr(inst)
+	case *ir.InstAlloca:
+		s.transferInstAlloca(inst)
 	//**********************************
 
 	default:

@@ -56,8 +56,6 @@ func Analyze(cfg Cfg) Table {
 		if !StateOrder(state, old_state) {
 			if NeedWiden(count) {
 				tbl.Bind(here, StateWiden(old_state, state, wide_threshold))
-				// TODO: Narrowing after widening
-				// must fix - doing widening and narrowing all the time may cause an infinite loop
 				// tbl.Bind(here, StateNarrow(old_state, state))
 			} else {
 				tbl.Bind(here, StateJoin(old_state, state))
@@ -65,6 +63,7 @@ func Analyze(cfg Cfg) Table {
 			}
 			worklist.AddSet(cfg.Succ(here))
 		}
+		// tbl.Bind(here, StateNarrow(old_state, state))
 	}
 	return tbl
 }

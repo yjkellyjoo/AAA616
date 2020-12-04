@@ -7,7 +7,7 @@ import (
 	"github.com/llir/llvm/ir"
 )
 
-const index = 100
+const index = 128
 
 /////////////////////
 // Interval Domain //
@@ -233,33 +233,42 @@ func InterMult(i1, i2 Interval) Interval {
 	panic("Unreachable") // sanity check
 }
 
-// SLE: i1 <= i2 ?
-// icmp sle 1, 2
+/* SLE: i1 <= i2 ?
+* icmp sle 1, 2
+* return the smaller interval
+ */
 func InterSLE(i1, i2 Interval) Interval {
-	// Top{} true, Bot{} false 로 해석
 	switch i1.(type) {
 	case Bot:
-		return InterTop()
 	case Top:
-		return InterBot()
+		switch i2.(type) {
+		case Bot:
+			return InterBot()
+		case Top:
+			return i1
+		case Inter:
+			var inter Inter
+			i2 := i2.(Inter)
+
+			inter.u = i2.u
+			inter.l = math.MinInt64
+			return inter
+		}
 	case Inter:
 		switch i2.(type) {
 		case Bot:
 			return InterBot()
 		case Top:
-			return InterTop()
+			return i1
 		case Inter:
-			// TODO:
+			var inter Inter
 			i1 := i1.(Inter)
 			i2 := i2.(Inter)
 
-			if i1.l >= i2.l && i1.u <= i2.u {
-				return InterTop()
-			} else if i1.l < i2.l && i1.u > i2.u {
-				return InterBot()
-			}
+			inter.u = i2.u // i1의 u가 i2의 u를 넘어가지 못함을 확인하기 때문에
+			inter.l = i1.l // lower 범위는 확인을 하지 않음
+			return inter
 		}
-
 	}
 	panic("Unreachable")
 }
